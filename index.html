@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Real-Time Log Viewer</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #1a1a1a;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 2em;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #status {
+            padding: 5px 10px;
+            border-radius: 5px;
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            font-size: 0.8em;
+        }
+        .connected { background-color: #174d20; color: rgb(247, 242, 242); margin-bottom: 2px }
+        .disconnected { background-color: #dc3545; color: white; }
+        
+        #log-container {
+            background-color: #0D0D0D;
+            border: 1px solid #969d96;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 1200px;
+            height: 75vh;
+            overflow-y: scroll;
+            padding: 1em;
+            box-shadow: 0 0 15px rgba(95, 103, 95, 0.4);
+            margin-top: 10px;
+        }
+
+        #log-output {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: #bdc2bd;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Connecting...</div>
+    <div id="log-container">
+        <pre id="log-output"></pre>
+    </div>
+
+    <script>
+        const logContainer = document.getElementById('log-container');
+        const logOutput = document.getElementById('log-output');
+        const statusDiv = document.getElementById('status');
+        
+        const socket = new WebSocket(`ws://${window.location.host}`);
+
+        socket.onopen = () => {
+            console.log('[WebSocket] Connection established.');
+            statusDiv.textContent = 'Connected';
+            statusDiv.className = 'connected';
+        };
+
+        socket.onmessage = (event) => {
+            logOutput.textContent += event.data;
+            
+            // if scrolled height is more than availabe height, scroll down
+            const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop;
+            if (isScrolledToBottom) {
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+        };
+
+        socket.onclose = () => {
+            console.log('[WebSocket] Connection closed.');
+            statusDiv.textContent = 'Disconnected';
+            statusDiv.className = 'disconnected';
+        };
+    </script>
+</body>
+</html>
